@@ -1,6 +1,13 @@
 # JobFlow — Distributed Job Scheduler
 
-A production-grade distributed job scheduler with priority queues, retry strategies, dead letter queues, scheduled jobs, worker management, and a real-time dashboard.
+This project is a distributed job scheduler that allows users to create queues, submit jobs, and execute them through worker services. It supports retries, job monitoring, and queue management.
+
+# Challenges I Faced 
+
+Understanding how workers claim jobs safely.
+Designing the database relationships.
+Learning Supabase Edge Functions.
+Testing retry logic.
 
 ## Features
 
