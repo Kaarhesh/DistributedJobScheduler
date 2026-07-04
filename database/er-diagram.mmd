@@ -1,0 +1,154 @@
+%% Distributed Job Scheduler — ER Diagram
+%% Render with any Mermaid viewer (GitHub, mermaid.live, etc.)
+
+erDiagram
+    users ||--o{ organizations : owns
+    users ||--o{ organization_members : member_of
+    organizations ||--o{ organization_members : has
+    organizations ||--o{ projects : contains
+    projects ||--o{ queues : has
+    queues ||--|| retry_policies : configured_with
+    queues ||--o{ jobs : contains
+    queues ||--|| queue_stats : summarized_in
+    jobs ||--o{ job_executions : produces
+    jobs ||--o{ job_logs : emits
+    jobs ||--o{ scheduled_jobs : tracked_in
+    jobs ||--o{ dead_letter_queue : may_move_to
+    workers ||--o{ job_executions : executes
+    workers ||--o{ worker_heartbeats : reports
+    jobs }o--o| workers : claimed_by
+
+    users {
+        uuid id PK
+        text email UK
+        text password_hash
+        text name
+        text role
+        timestamptz created_at
+    }
+    organizations {
+        uuid id PK
+        text name
+        text slug UK
+        uuid owner_id FK
+        timestamptz created_at
+    }
+    organization_members {
+        uuid id PK
+        uuid organization_id FK
+        uuid user_id FK
+        text role
+        timestamptz joined_at
+    }
+    projects {
+        uuid id PK
+        uuid organization_id FK
+        text name
+        text slug
+        text description
+        boolean is_active
+        timestamptz created_at
+    }
+    queues {
+        uuid id PK
+        uuid project_id FK
+        text name
+        int priority
+        int concurrency_limit
+        boolean is_paused
+        jsonb config
+        timestamptz created_at
+    }
+    retry_policies {
+        uuid id PK
+        uuid queue_id FK
+        text strategy
+        int max_attempts
+        int base_delay_ms
+        int max_delay_ms
+        timestamptz created_at
+    }
+    jobs {
+        uuid id PK
+        uuid queue_id FK
+        text type
+        text status
+        int priority
+        jsonb payload
+        jsonb result
+        text error
+        int attempts
+        uuid worker_id FK
+        timestamptz run_at
+        timestamptz claimed_at
+        timestamptz started_at
+        timestamptz finished_at
+        text idempotency_key
+        timestamptz created_at
+    }
+    job_executions {
+        uuid id PK
+        uuid job_id FK
+        uuid worker_id FK
+        int attempt_number
+        text status
+        int duration_ms
+        text error
+        timestamptz started_at
+        timestamptz finished_at
+    }
+    job_logs {
+        uuid id PK
+        uuid job_id FK
+        text level
+        text message
+        jsonb metadata
+        timestamptz created_at
+    }
+    workers {
+        uuid id PK
+        text name
+        text hostname
+        int concurrency
+        text status
+        timestamptz registered_at
+        timestamptz last_seen_at
+    }
+    worker_heartbeats {
+        uuid id PK
+        uuid worker_id FK
+        int active_jobs
+        int cpu_percent
+        int memory_mb
+        timestamptz created_at
+    }
+    scheduled_jobs {
+        uuid id PK
+        uuid job_id FK
+        text cron_expr
+        timestamptz next_run_at
+        timestamptz last_run_at
+        boolean is_active
+    }
+    dead_letter_queue {
+        uuid id PK
+        uuid job_id FK
+        uuid queue_id FK
+        text reason
+        jsonb payload
+        int attempts
+        timestamptz moved_at
+    }
+    queue_stats {
+        uuid id PK
+        uuid queue_id FK
+        int total_jobs
+        int queued
+        int running
+        int completed
+        int failed
+        int dead_lettered
+        numeric avg_duration_ms
+        numeric throughput_per_min
+        timestamptz updated_at
+    }

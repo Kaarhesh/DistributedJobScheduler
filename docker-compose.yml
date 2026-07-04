@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Frontend dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Worker tick scheduler (runs worker-tick every 10 seconds)
+  worker-scheduler:
+    image: alpine:latest
+    depends_on:
+      - dashboard
+    environment:
+      - SUPABASE_URL=${VITE_SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache curl jq
+        while true; do
+          echo "[$(date)] Running worker tick..."
+          curl -s -X POST \
+            -H "Authorization: Bearer $${SUPABASE_ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            "$${SUPABASE_URL}/functions/v1/worker-tick" \
+            -d '{}' | jq .
+          sleep 10
+        done
+    restart: unless-stopped
