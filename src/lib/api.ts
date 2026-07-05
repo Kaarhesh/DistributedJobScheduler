@@ -1,9 +1,4 @@
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase';
-
-const headers = {
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json',
-};
+import { supabase, SUPABASE_URL } from './supabase';
 
 export async function callEdgeFunction<T>(
   name: string,
@@ -15,9 +10,15 @@ export async function callEdgeFunction<T>(
   const { method = 'GET', body } = options;
   const url = `${SUPABASE_URL}/functions/v1/${name}`;
 
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+
   const response = await fetch(url, {
     method,
-    headers,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
 

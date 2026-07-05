@@ -10,8 +10,10 @@ import {
   Moon,
   Sun,
   Github,
+  LogOut,
 } from 'lucide-react';
 import { useTheme } from '../lib/theme';
+import { useAuth } from '../lib/auth';
 import { classNames } from '../lib/utils';
 
 export type PageId =
@@ -40,6 +42,7 @@ const NAV_ITEMS: { id: PageId; label: string; icon: typeof LayoutDashboard }[] =
 
 export function Sidebar({ current, onNavigate }: SidebarProps) {
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
 
   return (
     <aside className="flex h-full w-60 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -76,6 +79,18 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
       </nav>
 
       <div className="border-t border-gray-200 p-3 dark:border-gray-700">
+        {user && (
+          <div className="mb-2 flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-700/50">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+              {(user.email ?? '?')[0].toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-gray-900 dark:text-white">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        )}
         <button
           onClick={toggleTheme}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
@@ -92,6 +107,13 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
           <Github className="h-4 w-4" />
           GitHub
         </a>
+        <button
+          onClick={() => signOut()}
+          className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </button>
       </div>
     </aside>
   );
